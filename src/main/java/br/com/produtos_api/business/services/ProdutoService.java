@@ -1,105 +1,104 @@
 package br.com.produtos_api.business.services;
 
-import br.com.produtos_api.controller.dto.ProdutoCreateRequestDTO;
 import br.com.produtos_api.controller.dto.ProdutoRequestDTO;
+import br.com.produtos_api.controller.dto.ProdutoResponseDTO;
 
+import br.com.produtos_api.infrastructure.entities.Produto;
 import br.com.produtos_api.infrastructure.exceptions.InvalidValueException;
 import br.com.produtos_api.infrastructure.exceptions.ListException;
 import br.com.produtos_api.infrastructure.exceptions.ProductNotFound;
 import br.com.produtos_api.infrastructure.exceptions.ServerException;
+import br.com.produtos_api.infrastructure.repositories.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 
 @Service
 @RequiredArgsConstructor
 public class ProdutoService {
-    private final List<ProdutoRequestDTO> listaProdutos = new ArrayList<>();
-    private Long nextId = 1L;
+    private final ProdutoRepository produtoRepository;
 
-    public ProdutoRequestDTO addProdutos(ProdutoCreateRequestDTO produto) {
+    public ProdutoResponseDTO addProdutos(ProdutoRequestDTO dto) {
 
-        if (produto == null) {
-
+        if (dto == null) {
             throw new ServerException("Produto não pode ser nulo.");
         }
 
-        if (produto.preco() <= 0 || produto.quantidadeEstoque() < 0) {
-
+        if (dto.preco() <= 0 || dto.quantidadeEstoque() < 0) {
             throw new InvalidValueException("Valor negativo. Valor inválido.");
         }
 
-        ProdutoRequestDTO novoProduto = new ProdutoRequestDTO(
+        Produto produto = Produto.builder()
+                .nome(dto.nome())
+                .descricao(dto.descricao())
+                .preco(dto.preco())
+                .quantidadeEstoque(dto.quantidadeEstoque())
+                .dataCadastro(OffsetDateTime.now())
+                .build();
 
-                nextId++,
-                produto.nome(),
-                produto.descricao(),
-                produto.preco(),
-                produto.quantidadeEstoque(),
-                OffsetDateTime.now()
-        );
+        Produto salvo = produtoRepository.save(produto);
 
-        listaProdutos.add(novoProduto);
-        return novoProduto;
+        return toDTO(salvo);
     }
 
-    public List<ProdutoRequestDTO> getAllProdutos() {
+    public List<ProdutoResponseDTO> getAllProdutos() {
 
-        if (listaProdutos.isEmpty()) {
+        List<Produto> produtos = produtoRepository.findAll();
 
+        if (produtos.isEmpty()) {
             throw new ListException("Nenhum produto cadastrado.");
         }
 
-        return listaProdutos;
+        return produtos.stream().map(this::toDTO).toList();
     }
 
-    public ProdutoRequestDTO getProdutoById(Long id) {
+    public ProdutoResponseDTO getProdutoById(Long id) {
 
-        return listaProdutos.stream().filter(
-                produto -> produto.id().equals(id)
-        ).findFirst().orElse(null);
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));
+
+        return toDTO(produto);
     }
 
-    public void updateProduto(Long id, ProdutoCreateRequestDTO produto) {
+    public void updateProduto(Long id, ProdutoRequestDTO dto) {
 
-        if (produto.preco() <= 0 || produto.quantidadeEstoque() < 0) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));
+
+        if (dto.preco() <= 0 || dto.quantidadeEstoque() < 0) {
 
             throw new InvalidValueException("Atualização inválida.");
         }
 
-        for (int i = 0; i < listaProdutos.size(); i++) {
+        produto.setNome(dto.nome());
+        produto.setDescricao(dto.descricao());
+        produto.setPreco(dto.preco());
+        produto.setQuantidadeEstoque(dto.quantidadeEstoque());
 
-            ProdutoRequestDTO atual = listaProdutos.get(i);
-
-            if (atual.id().equals(id)) {
-
-                ProdutoRequestDTO atualizado = new ProdutoRequestDTO(
-                        id,
-                        produto.nome(),
-                        produto.descricao(),
-                        produto.preco(),
-                        produto.quantidadeEstoque(),
-                        atual.dataCadastro()
-                );
-
-                listaProdutos.set(i, atualizado);
-                return;
-            }
-        }
-
-        throw new ProductNotFound("Produto não encontrado. ID: " + id);
+        produtoRepository.save(produto);
     }
 
+
     public void removeProduto(Long id) {
-        boolean removido = listaProdutos.removeIf(produto -> produto.id().equals(id));
 
-        if (!removido) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));
 
-            throw new ProductNotFound("Produto não encontrado. ID: " + id);
-        }
+        produtoRepository.delete(produto);
+    }
+
+    private ProdutoResponseDTO toDTO(Produto p) {
+
+        return new ProdutoResponseDTO(
+                p.getId(),
+                p.getNome(),
+                p.getDescricao(),
+                p.getPreco(),
+                p.getQuantidadeEstoque(),
+                p.getDataCadastro()
+        );
     }
 }

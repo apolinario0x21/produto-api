@@ -1,11 +1,9 @@
 package br.com.produtos_api.controller;
 
 import br.com.produtos_api.business.services.ProdutoService;
-import br.com.produtos_api.controller.dto.ProdutoCreateRequestDTO;
 import br.com.produtos_api.controller.dto.ProdutoRequestDTO;
+import br.com.produtos_api.controller.dto.ProdutoResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,26 +21,26 @@ public class ProdutoController {
 
     @PostMapping
     @Operation(summary = "Adicionar um novo produto")
-    public ResponseEntity<ProdutoRequestDTO> addProduto(@RequestBody @Valid ProdutoCreateRequestDTO produto) {
+    public ResponseEntity<ProdutoResponseDTO> addProduto(@RequestBody @Valid ProdutoRequestDTO produto) {
 
-        ProdutoRequestDTO criado = produtoService.addProdutos(produto);
+        ProdutoResponseDTO criado = produtoService.addProdutos(produto);
         return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
 
     @GetMapping
     @Operation(summary = "Listar todos os produtos")
-    public ResponseEntity<List<ProdutoRequestDTO>> getAllProducts() {
+    public ResponseEntity<List<ProdutoResponseDTO>> getAllProducts() {
 
-        List<ProdutoRequestDTO> produtos = produtoService.getAllProdutos();
+        List<ProdutoResponseDTO> produtos = produtoService.getAllProdutos();
         return ResponseEntity.ok(produtos);
 
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar produto por ID")
-    public ResponseEntity<ProdutoRequestDTO> getProdutcsById(@PathVariable Long id) {
+    public ResponseEntity<ProdutoResponseDTO> getProdutcsById(@PathVariable Long id) {
 
-        ProdutoRequestDTO produto = produtoService.getProdutoById(id);
+        ProdutoResponseDTO produto = produtoService.getProdutoById(id);
         if (produto != null) {
             return ResponseEntity.ok(produto);
         } else {
@@ -52,7 +50,7 @@ public class ProdutoController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar produto por ID")
-    public ResponseEntity<Void> updateProduct(@PathVariable Long id, @RequestBody ProdutoCreateRequestDTO produtoAtualizado) {
+    public ResponseEntity<Void> updateProduct(@PathVariable Long id, @RequestBody ProdutoRequestDTO produtoAtualizado) {
 
         try {
             produtoService.updateProduto(id, produtoAtualizado);
