@@ -6,8 +6,8 @@ import br.com.produtos_api.controller.dto.ProdutoRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-//import org.springdoc.core.service.GenericResponseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,31 +20,17 @@ import java.util.List;
 public class ProdutoController {
 
     private final ProdutoService produtoService;
-    //private final GenericResponseService responseBuilder;
-
 
     @PostMapping
     @Operation(summary = "Adicionar um novo produto")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Produto adicionado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Erro ao adicionar produto"),
-            @ApiResponse(responseCode = "422", description = "Campos não atende os requisitos de produto"),
-            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    })
-    public ResponseEntity<Void> addProduto(@RequestBody ProdutoCreateRequestDTO produto) {
+    public ResponseEntity<ProdutoRequestDTO> addProduto(@RequestBody @Valid ProdutoCreateRequestDTO produto) {
 
-        produtoService.addProdutos(produto);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        ProdutoRequestDTO criado = produtoService.addProdutos(produto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
 
     @GetMapping
     @Operation(summary = "Listar todos os produtos")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Produto listado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Erro ao listar produto"),
-            @ApiResponse(responseCode = "422", description = "Campos não atende os requisitos de produto"),
-            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    })
     public ResponseEntity<List<ProdutoRequestDTO>> getAllProducts() {
 
         List<ProdutoRequestDTO> produtos = produtoService.getAllProdutos();
@@ -54,12 +40,6 @@ public class ProdutoController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar produto por ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Produto encontrado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Erro ao buscar produto"),
-            @ApiResponse(responseCode = "422", description = "Campos não atende os requisitos de produto"),
-            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    })
     public ResponseEntity<ProdutoRequestDTO> getProdutcsById(@PathVariable Long id) {
 
         ProdutoRequestDTO produto = produtoService.getProdutoById(id);
@@ -72,13 +52,6 @@ public class ProdutoController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar produto por ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Produto atualizado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Erro ao atualizar produto"),
-            @ApiResponse(responseCode = "404", description = "Produto não encontrado"),
-            @ApiResponse(responseCode = "422", description = "Campos não atende os requisitos de produto"),
-            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    })
     public ResponseEntity<Void> updateProduct(@PathVariable Long id, @RequestBody ProdutoCreateRequestDTO produtoAtualizado) {
 
         try {
@@ -91,12 +64,6 @@ public class ProdutoController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Remover produto por ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Produto removido com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Erro ao remover produto"),
-            @ApiResponse(responseCode = "422", description = "Campos não atende os requisitos de produto"),
-            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    })
     public ResponseEntity<Void> removeProduct(@PathVariable Long id) {
 
         try {
