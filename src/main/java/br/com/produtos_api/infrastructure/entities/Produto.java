@@ -3,6 +3,7 @@ package br.com.produtos_api.infrastructure.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -19,8 +20,10 @@ public class Produto {
 
     private String nome;
     private String descricao;
-    private Double preco;
-    private Double quantidadeEstoque;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal preco;
+    private Integer quantidadeEstoque;
     private OffsetDateTime dataCadastro;
 }
 

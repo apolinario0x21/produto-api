@@ -12,6 +12,8 @@ import br.com.produtos_api.infrastructure.repositories.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -21,30 +23,46 @@ import java.util.List;
 public class ProdutoService {
     private final ProdutoRepository produtoRepository;
 
-    public ProdutoResponseDTO addProdutos(ProdutoRequestDTO dto) {
+    public ProdutoResponseDTO createProduto(ProdutoRequestDTO dto) {
+
+        Produto produto = Produto.builder()
+                .nome(dto.nome())
+                .descricao(dto.descricao())
+                .preco(dto.preco().setScale(2, RoundingMode.HALF_UP))
+                .quantidadeEstoque(dto.quantidadeEstoque())
+                .dataCadastro(OffsetDateTime.now())
+                .build();
 
         if (dto == null) {
             throw new ServerException("Produto não pode ser nulo.");
         }
 
-        if (dto.preco() <= 0 || dto.quantidadeEstoque() < 0) {
-            throw new InvalidValueException("Valor negativo. Valor inválido.");
+        if (dto.nome() == null || dto.nome().isBlank()) {
+            throw new InvalidValueException("Nome do produto não pode ser nulo ou vazio.");
         }
 
-        Produto produto = Produto.builder()
-                .nome(dto.nome())
-                .descricao(dto.descricao())
-                .preco(dto.preco())
-                .quantidadeEstoque(dto.quantidadeEstoque())
-                .dataCadastro(OffsetDateTime.now())
-                .build();
+        if (dto.descricao() == null || dto.descricao().isBlank()) {
+            throw new InvalidValueException("Descrição do produto não pode ser nula ou vazia.");
+        }
+
+        if (dto.preco() == null || dto.quantidadeEstoque() == null) {
+            throw new InvalidValueException("Preço e/ou Quantidade não pode ser nula.");
+        }
+
+        if (dto.preco().compareTo(BigDecimal.ZERO) <= 0 || dto.quantidadeEstoque() < 0) {
+            throw new InvalidValueException("Preço e/ou quantidade em estoque devem ser maiores que zero.");
+        }
+
+        if (dto.quantidadeEstoque() >= 10000) {
+            throw new InvalidValueException("Quantidade em estoque não pode ser maior que 10.000.");
+        }
 
         Produto salvo = produtoRepository.save(produto);
 
         return toDTO(salvo);
     }
 
-    public List<ProdutoResponseDTO> getAllProdutos() {
+    public List<ProdutoResponseDTO> findAllProdutos() {
 
         List<Produto> produtos = produtoRepository.findAll();
 
@@ -55,7 +73,7 @@ public class ProdutoService {
         return produtos.stream().map(this::toDTO).toList();
     }
 
-    public ProdutoResponseDTO getProdutoById(Long id) {
+    public ProdutoResponseDTO findById(Long id) {
 
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));
@@ -68,21 +86,36 @@ public class ProdutoService {
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));
 
-        if (dto.preco() <= 0 || dto.quantidadeEstoque() < 0) {
+        produto.setNome(dto.nome());
+        produto.setDescricao(dto.descricao());
+        produto.setPreco(dto.preco().setScale(2, RoundingMode.HALF_UP));
+        produto.setQuantidadeEstoque(dto.quantidadeEstoque());
+
+        produtoRepository.save(produto);
+
+        if (dto.preco().compareTo(BigDecimal.ZERO) < 0 || dto.quantidadeEstoque() < 0) {
 
             throw new InvalidValueException("Atualização inválida.");
         }
 
-        produto.setNome(dto.nome());
-        produto.setDescricao(dto.descricao());
-        produto.setPreco(dto.preco());
-        produto.setQuantidadeEstoque(dto.quantidadeEstoque());
+        if (dto.quantidadeEstoque() >= 10000) {
+            throw new InvalidValueException("Quantidade em estoque não pode ser maior que 10.000.");
+        }
 
-        produtoRepository.save(produto);
+        if (dto == null) {
+            throw new ServerException("Produto não pode ser nulo.");
+        }
+
+        if (dto.nome() == null || dto.nome().isBlank()) {
+            throw new InvalidValueException("Nome do produto não pode ser nulo ou vazio.");
+        }
+
+        if (dto.descricao() == null || dto.descricao().isBlank()) {
+            throw new InvalidValueException("Descrição do produto não pode ser nula ou vazia.");
+        }
     }
 
-
-    public void removeProduto(Long id) {
+    public void deleteProduto(Long id) {
 
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));
@@ -90,15 +123,15 @@ public class ProdutoService {
         produtoRepository.delete(produto);
     }
 
-    private ProdutoResponseDTO toDTO(Produto p) {
+    private ProdutoResponseDTO toDTO(Produto produto) {
 
         return new ProdutoResponseDTO(
-                p.getId(),
-                p.getNome(),
-                p.getDescricao(),
-                p.getPreco(),
-                p.getQuantidadeEstoque(),
-                p.getDataCadastro()
+                produto.getId(),
+                produto.getNome(),
+                produto.getDescricao(),
+                produto.getPreco(),
+                produto.getQuantidadeEstoque(),
+                produto.getDataCadastro()
         );
     }
 }
