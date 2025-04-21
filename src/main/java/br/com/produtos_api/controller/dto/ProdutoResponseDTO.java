@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 public record ProdutoResponseDTO(
 
-        Long id,
+        UUID id,
         String nome,
         String descricao,
         BigDecimal preco,

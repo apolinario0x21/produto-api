@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 
 @Service
@@ -33,30 +34,6 @@ public class ProdutoService {
                 .dataCadastro(OffsetDateTime.now())
                 .build();
 
-        if (dto == null) {
-            throw new ServerException("Produto não pode ser nulo.");
-        }
-
-        if (dto.nome() == null || dto.nome().isBlank()) {
-            throw new InvalidValueException("Nome do produto não pode ser nulo ou vazio.");
-        }
-
-        if (dto.descricao() == null || dto.descricao().isBlank()) {
-            throw new InvalidValueException("Descrição do produto não pode ser nula ou vazia.");
-        }
-
-        if (dto.preco() == null || dto.quantidadeEstoque() == null) {
-            throw new InvalidValueException("Preço e/ou Quantidade não pode ser nula.");
-        }
-
-        if (dto.preco().compareTo(BigDecimal.ZERO) <= 0 || dto.quantidadeEstoque() < 0) {
-            throw new InvalidValueException("Preço e/ou quantidade em estoque devem ser maiores que zero.");
-        }
-
-        if (dto.quantidadeEstoque() >= 10000) {
-            throw new InvalidValueException("Quantidade em estoque não pode ser maior que 10.000.");
-        }
-
         Produto salvo = produtoRepository.save(produto);
 
         return toDTO(salvo);
@@ -73,7 +50,7 @@ public class ProdutoService {
         return produtos.stream().map(this::toDTO).toList();
     }
 
-    public ProdutoResponseDTO findById(Long id) {
+    public ProdutoResponseDTO findById(UUID id) {
 
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));
@@ -81,7 +58,7 @@ public class ProdutoService {
         return toDTO(produto);
     }
 
-    public void updateProduto(Long id, ProdutoRequestDTO dto) {
+    public void updateProduto(UUID id, ProdutoRequestDTO dto) {
 
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));
@@ -92,30 +69,9 @@ public class ProdutoService {
         produto.setQuantidadeEstoque(dto.quantidadeEstoque());
 
         produtoRepository.save(produto);
-
-        if (dto.preco().compareTo(BigDecimal.ZERO) < 0 || dto.quantidadeEstoque() < 0) {
-
-            throw new InvalidValueException("Atualização inválida.");
-        }
-
-        if (dto.quantidadeEstoque() >= 10000) {
-            throw new InvalidValueException("Quantidade em estoque não pode ser maior que 10.000.");
-        }
-
-        if (dto == null) {
-            throw new ServerException("Produto não pode ser nulo.");
-        }
-
-        if (dto.nome() == null || dto.nome().isBlank()) {
-            throw new InvalidValueException("Nome do produto não pode ser nulo ou vazio.");
-        }
-
-        if (dto.descricao() == null || dto.descricao().isBlank()) {
-            throw new InvalidValueException("Descrição do produto não pode ser nula ou vazia.");
-        }
     }
 
-    public void deleteProduto(Long id) {
+    public void deleteProduto(UUID id) {
 
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFound("Produto não encontrado. ID: " + id));

@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -21,7 +22,7 @@ public class ProdutoController {
 
     @PostMapping
     @Operation(summary = "Adicionar um novo produto")
-    public ResponseEntity<ProdutoResponseDTO> createProduto(@RequestBody @Valid ProdutoRequestDTO produto) {
+    public ResponseEntity<ProdutoResponseDTO> createProduto(@Valid @RequestBody ProdutoRequestDTO produto) {
 
         ProdutoResponseDTO criado = produtoService.createProduto(produto);
         return ResponseEntity.status(HttpStatus.CREATED).body(criado);
@@ -33,12 +34,11 @@ public class ProdutoController {
 
         List<ProdutoResponseDTO> produtos = produtoService.findAllProdutos();
         return ResponseEntity.ok(produtos);
-
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar produto por ID")
-    public ResponseEntity<ProdutoResponseDTO> getProdutoById(@PathVariable Long id) {
+    public ResponseEntity<ProdutoResponseDTO> getProdutoById(@PathVariable UUID id) {
 
         ProdutoResponseDTO produto = produtoService.findById(id);
         if (produto != null) {
@@ -50,7 +50,7 @@ public class ProdutoController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar produto por ID")
-    public ResponseEntity<Void> updateProduto(@PathVariable Long id, @RequestBody ProdutoRequestDTO produtoAtualizado) {
+    public ResponseEntity<Void> updateProduto(@PathVariable UUID id, @Valid @RequestBody ProdutoRequestDTO produtoAtualizado) {
 
         try {
             produtoService.updateProduto(id, produtoAtualizado);
@@ -62,7 +62,7 @@ public class ProdutoController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Remover produto por ID")
-    public ResponseEntity<Void> deleteProduto(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProduto(@PathVariable UUID id) {
 
         try {
             produtoService.deleteProduto(id);
